@@ -49,6 +49,12 @@
   .addph{flex:0 0 auto;width:84px;height:84px;border-radius:10px;border:2px dashed #b8c6bd;display:flex;align-items:center;justify-content:center;
     flex-direction:column;color:var(--brand);font-size:12px;background:#fafcfb}
   .addph b{font-size:26px;line-height:1}
+  .thumb{position:relative}
+  .thumb .chk{position:absolute;left:4px;bottom:4px;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:99px;background:#fff6db;color:#5c4100;border:1px solid #e9cf7a}
+  .hint{display:flex;gap:8px;align-items:flex-start;background:var(--amber-soft);color:#5c4100;border-radius:10px;padding:8px 10px;font-size:13px;margin:0 0 8px}
+  #dOri .ow{background:#222;border-radius:10px;display:flex;align-items:center;justify-content:center;height:min(58vh,520px);overflow:hidden;margin-bottom:10px}
+  #dOri .ow img{max-width:100%;max-height:100%;display:block}
+  #dOri .btns .btn{padding:14px;font-size:16px}
   /* Filas de sorteos */
   .colh{display:grid;grid-template-columns:1fr 1fr 52px;gap:6px;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding:0 2px 4px;text-align:center}
   .er{border-top:1px solid var(--line);padding:8px 0}
@@ -163,6 +169,7 @@
   <!-- Fotos -->
   <section class="card noprint">
     <h2>Fotos de los apuntes <span class="sp"></span><span class="muted" id="nFotos"></span></h2>
+    <p class="hint"><span>📷</span><span>Tomá la foto con la hoja <b>derecha</b>, de frente y con buena luz, que se vea completa la jornada del día.</span></p>
     <div class="thumbs" id="thumbs">
       <label class="addph"><b>＋</b>Agregar<input type="file" id="fileIn" accept="image/*" multiple hidden></label>
     </div>
@@ -239,6 +246,19 @@
   <div id="vwrap"><img id="vimg" alt="Foto de apuntes"></div>
 </dialog>
 
+<!-- Confirmar orientación de cada foto -->
+<dialog id="dOri">
+  <div class="dh"><h3 id="oTitle">¿Se lee derecha?</h3><button class="x" data-close>✕</button></div>
+  <div class="db">
+    <div class="ow"><img id="oImg" alt="Foto para revisar"></div>
+    <p class="muted" id="oMsg" style="margin:0 0 10px"></p>
+    <div class="btns">
+      <button class="btn sec" id="oRot">↻ Girar</button>
+      <button class="btn" id="oOk">✓ Sí, se lee derecha</button>
+    </div>
+  </div>
+</dialog>
+
 <!-- Historial -->
 <dialog id="dHist">
   <div class="dh"><h3>Historial de cierres</h3><button class="x" data-close>✕</button></div>
@@ -256,10 +276,16 @@
 <dialog id="dCfg">
   <div class="dh"><h3>Ajustes</h3><button class="x" data-close>✕</button></div>
   <div class="db">
-    <h4 style="margin-top:0">Lectura con IA (Claude)</h4>
-    <p class="muted" style="margin:0 0 8px">Necesita una clave de API de Anthropic (console.anthropic.com). Se guarda solo en este dispositivo.</p>
-    <label class="f">Clave de API<input type="password" id="apiKey" placeholder="sk-ant-…" autocomplete="off"></label>
-    <label class="f">Modelo<input type="text" id="apiModel" placeholder="claude-sonnet-5-5"></label>
+    <h4 style="margin-top:0">Lectura de fotos con IA</h4>
+    <p class="muted" style="margin:0 0 8px">Gratis, con el servicio del puesto. Pedile el PIN al dueño; se guarda solo en este teléfono.</p>
+    <label class="f">PIN del puesto<input type="password" id="shopPin" inputmode="numeric" autocomplete="off" placeholder="PIN"></label>
+    <details style="margin:0 0 6px">
+      <summary class="muted" style="cursor:pointer">Avanzado: usar Claude con clave propia (tiene costo)</summary>
+      <label class="f" style="margin-top:8px">Servicio
+        <select id="iaModo"><option value="gratis">Gratis (servicio del puesto)</option><option value="claude">Claude (clave de API propia)</option></select></label>
+      <label class="f">Clave de API de Anthropic<input type="password" id="apiKey" placeholder="sk-ant-…" autocomplete="off"></label>
+      <label class="f">Modelo de Claude<input type="text" id="apiModel" placeholder="claude-sonnet-5-5"></label>
+    </details>
 
     <h4>Loterías</h4>
     <p class="muted" style="margin:0 0 8px">Turnos separados por coma. Dejalo vacío si la lotería no se marca por turno (puede tener uno o varios sorteos al día).</p>
@@ -286,7 +312,11 @@
 "use strict";
 /* ---------- Utilidades ---------- */
 const $ = s => document.querySelector(s);
-const LS = {cfg:'cc_cfg_v2', draft:'cc_draft_v2', hist:'cc_hist_v1', key:'cc_apikey', model:'cc_model'};
+const LS = {cfg:'cc_cfg_v2', draft:'cc_draft_v2', hist:'cc_hist_v1', key:'cc_apikey', model:'cc_model', pin:'cc_pin', modo:'cc_modo'};
+// Servicio gratis de lectura (Cloudflare Worker + Workers AI). Código en worker/ del repo privado.
+// (cc_worker_url solo sirve para probar con un Worker local)
+const WORKER_URL = localStorage.getItem('cc_worker_url') || 'https://myspot-proxy.cristhiangp.workers.dev/leer';
+const MAX_FOTOS_GRATIS = 4;
 const load = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
 const save = (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){ toast('No se pudo guardar en el dispositivo'); } };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
@@ -355,7 +385,7 @@ function migrate(c){
   return c;
 }
 let cur = migrate(load(LS.draft)) || newCierre();
-let photos = []; // {name, dataUrl}
+let photos = []; // {name, dataUrl, ok (orientación confirmada), auto (se giró sola)}
 let vIdx = -1;
 const persistDraft = () => save(LS.draft, cur);
 const rowHasData = r => !isBlank(r.venta) || !isBlank(r.premio);
@@ -571,21 +601,65 @@ async function rotateDataUrl(src){
   x.drawImage(img, -img.naturalWidth/2, -img.naturalHeight/2);
   return c.toDataURL('image/jpeg', 0.85);
 }
+// ¿La hoja está de lado? Compara qué tan "rayado" es el perfil por filas (renglones de la tabla)
+// contra el perfil por columnas. No distingue derecha de cabeza ni izquierda de derecha: eso lo confirma el dependiente.
+// Probado con las fotos de ejemplo en 7 orientaciones (worker/test/orient-heur.mjs).
+async function pareceDeLado(src){
+  const img = await loadImg(src);
+  const s = Math.min(1, 400 / Math.max(img.naturalWidth, img.naturalHeight));
+  const w = Math.max(1, Math.round(img.naturalWidth * s)), h = Math.max(1, Math.round(img.naturalHeight * s));
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d', {willReadFrequently:true}); x.drawImage(img, 0, 0, w, h);
+  const d = x.getImageData(0, 0, w, h).data, g = new Float32Array(w*h);
+  let mean = 0;
+  for (let i = 0; i < w*h; i++) { g[i] = (d[i*4]*3 + d[i*4+1]*6 + d[i*4+2]) / 10; mean += g[i]; }
+  mean /= w*h;
+  const R = new Float64Array(h), C = new Float64Array(w);
+  for (let y = 0; y < h; y++) for (let xx = 0; xx < w; xx++) if (g[y*w+xx] < mean*0.8) { R[y]++; C[xx]++; }
+  const peak = P => { let a = 0, b = 0; for (let i = 1; i < P.length; i++) { a += (P[i]-P[i-1])**2; b += P[i]**2; } return a / (b || 1); };
+  return peak(R) / (peak(C) || 1e-9) < 1;
+}
 $('#fileIn').addEventListener('change', async e => {
   const files = [...e.target.files]; e.target.value = '';
+  const antes = photos.length;
   for (const f of files) {
-    try { photos.push({name: f.name, dataUrl: await resizeFile(f)}); }
-    catch { toast('No se pudo abrir ' + f.name); }
+    try {
+      let dataUrl = await resizeFile(f), auto = false;
+      try { if (await pareceDeLado(dataUrl)) { dataUrl = await rotateDataUrl(dataUrl); auto = true; } } catch {}
+      photos.push({name: f.name, dataUrl, ok:false, auto});
+    } catch { toast('No se pudo abrir ' + f.name); }
   }
   renderPhotos(); recalc();
+  if (photos.length > antes) revisarOrientacion();
 });
+
+/* Confirmación de orientación: cada foto se revisa una vez antes de leerla */
+let oIdx = -1, leerAlTerminar = false;
+function revisarOrientacion(luegoLeer = false){
+  leerAlTerminar = leerAlTerminar || luegoLeer;
+  oIdx = photos.findIndex(p => !p.ok);
+  if (oIdx < 0) { const leer = leerAlTerminar; leerAlTerminar = false; if ($('#dOri').open) $('#dOri').close(); renderPhotos(); if (leer) leerFotos(); return; }
+  const p = photos[oIdx], pend = photos.filter(x => !x.ok).length;
+  $('#oImg').src = p.dataUrl;
+  $('#oTitle').textContent = pend > 1 ? `¿Se lee derecha? (foto ${oIdx+1}, faltan ${pend})` : `¿Se lee derecha? (foto ${oIdx+1})`;
+  $('#oMsg').innerHTML = (p.auto ? '<b>La giramos porque parecía de lado.</b> ' : '') +
+    'Girala hasta que los títulos impresos ("Lunes", "Venta:", "Premio:") se lean derechos, no de lado ni de cabeza. Así la IA lee mucho mejor.';
+  if (!$('#dOri').open) $('#dOri').showModal();
+}
+$('#oRot').addEventListener('click', async () => {
+  if (oIdx < 0) return; const b = $('#oRot'); b.disabled = true;
+  try { photos[oIdx].dataUrl = await rotateDataUrl(photos[oIdx].dataUrl); photos[oIdx].auto = false; $('#oImg').src = photos[oIdx].dataUrl; }
+  finally { b.disabled = false; }
+});
+$('#oOk').addEventListener('click', () => { if (oIdx >= 0) photos[oIdx].ok = true; revisarOrientacion(); });
+$('#dOri').addEventListener('close', () => { leerAlTerminar = false; renderPhotos(); });
 function renderPhotos(){
   const wrap = $('#thumbs'); const add = wrap.querySelector('.addph');
   wrap.querySelectorAll('.thumb').forEach(n => n.remove());
   photos.forEach((p,i) => {
     const d = document.createElement('div'); d.className = 'thumb';
-    d.innerHTML = `<img src="${p.dataUrl}" alt="Foto ${i+1}">`;
-    d.onclick = () => openViewer(i);
+    d.innerHTML = `<img src="${p.dataUrl}" alt="Foto ${i+1}">` + (p.ok ? '' : '<span class="chk">↻ revisar</span>');
+    d.onclick = () => p.ok ? openViewer(i) : revisarOrientacion();
     wrap.insertBefore(d, add);
   });
 }
@@ -628,7 +702,9 @@ Si la hoja trae totales escritos ("Total:"), reportalos aparte; no los incluyas 
 Loterías conocidas:
 ${cat}
 Los sorteos NO siempre siguen el mismo orden y una lotería puede repetirse varias veces en el día. Un orden habitual es: ${tpl}.
-La Nica tiene un sorteo "Extra" los martes y fines de semana: un renglón de Nica que no diga Día, Tarde ni Noche probablemente es el Extra.
+La Nica tiene un sorteo "Extra" los martes y fines de semana. Suele escribirse a mano como "Nica G" o "NicaG": eso es la Nica Extra (turno "Extra"). Un renglón de Nica que no diga Día, Tarde ni Noche también es el Extra.
+La columna de premios a veces queda escrita medio renglón más arriba o más abajo que la de ventas. Emparejá cada premio con su sorteo por ORDEN (el 1.er premio con el 1.er sorteo, el 2.º con el 2.º…), no por la altura exacta. Un premio escrito debajo del último renglón impreso pertenece al renglón agregado a mano.
+Los números están escritos a mano: fijate bien en 7 y 1, 3 y 5, 4 y 9. Las ventas casi siempre terminan en 00 o 50.
 Si el turno de una lotería que sí se marca por turno no está escrito, deducilo por su posición (Día, luego Tarde, luego Noche) y mencionalo en "dudas".
 Si hay un renglón agregado a mano o un monto suelto que no sabés a qué sorteo pertenece, incluilo con tu mejor interpretación y explicalo en "dudas".
 
@@ -645,32 +721,52 @@ function matchLoteria(name){
 function matchTurno(lot, t){
   const n = norm(t); if (!n) return '';
   const ts = turnosDe(lot);
+  if (/^g\b|^g$/.test(n) && ts.some(x => norm(x) === 'extra')) return ts.find(x => norm(x) === 'extra');   // "Nica G" = Nica Extra
   return ts.find(x => norm(x) === n) || ts.find(x => norm(x).startsWith(n) || n.startsWith(norm(x))) ||
          (/(manana|dia|mediodia)/.test(n) ? ts.find(x => norm(x) === 'dia') : null) || null;
 }
-$('#bIA').addEventListener('click', async () => {
-  const key = localStorage.getItem(LS.key);
-  if (!key) { toast('Primero configurá la clave de API'); openCfg(); return; }
+const modoIA = () => localStorage.getItem(LS.modo) === 'claude' ? 'claude' : 'gratis';
+$('#bIA').addEventListener('click', () => {
+  const modo = modoIA();
+  if (modo === 'gratis' && !localStorage.getItem(LS.pin)) { toast('Primero poné el PIN del puesto'); openCfg(); return; }
+  if (modo === 'claude' && !localStorage.getItem(LS.key)) { toast('Primero configurá la clave de API'); openCfg(); return; }
   if (!photos.length) { toast('Agregá al menos una foto'); return; }
+  if (modo === 'gratis' && photos.length > MAX_FOTOS_GRATIS) { toast(`Máximo ${MAX_FOTOS_GRATIS} fotos por lectura. Quitá las que sobran.`); return; }
   if (hasData() && !confirm('La lectura reemplaza las filas y montos actuales. ¿Continuar?')) return;
-  const btn = $('#bIA'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Leyendo fotos…';
+  if (photos.some(p => !p.ok)) { revisarOrientacion(true); return; }   // primero confirmar que se lean derechas
+  leerFotos();
+});
+async function leerConWorker(imgs, prompt){
+  const r = await fetch(WORKER_URL, {method:'POST', headers:{'content-type':'application/json'},
+    body: JSON.stringify({pin: localStorage.getItem(LS.pin) || '', prompt, images: imgs})});
+  const data = await r.json().catch(() => ({}));
+  if (r.status === 401) { setTimeout(openCfg, 300); throw new Error('El PIN del puesto no es correcto. Revisalo en ⚙️ Ajustes.'); }
+  if (!r.ok || !data.ok) throw new Error(data.error || ('Error ' + r.status));
+  return data.text || '';
+}
+async function leerConClaude(imgs, prompt){
+  const content = imgs.map(data => ({type:'image', source:{type:'base64', media_type:'image/jpeg', data}}));
+  content.push({type:'text', text: prompt});
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'content-type':'application/json','x-api-key':localStorage.getItem(LS.key),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body: JSON.stringify({model: localStorage.getItem(LS.model) || 'claude-sonnet-5-5', max_tokens: 3000, messages:[{role:'user', content}]})
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((data.error && data.error.message) || ('Error ' + r.status));
+  return (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+}
+async function leerFotos(){
+  const btn = $('#bIA'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Leyendo fotos… (puede tardar un minuto)';
   try {
-    const content = photos.map(p => ({type:'image', source:{type:'base64', media_type:'image/jpeg', data:p.dataUrl.split(',')[1]}}));
-    content.push({type:'text', text: buildPrompt()});
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body: JSON.stringify({model: localStorage.getItem(LS.model) || 'claude-sonnet-5-5', max_tokens: 3000, messages:[{role:'user', content}]})
-    });
-    const data = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error((data.error && data.error.message) || ('Error ' + r.status));
-    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    const imgs = photos.map(p => p.dataUrl.split(',')[1]);
+    const text = modoIA() === 'claude' ? await leerConClaude(imgs, buildPrompt()) : await leerConWorker(imgs, buildPrompt());
     applyIA(extractJson(text));
     toast('Listo. Revisá los montos en azul.');
   } catch (err) {
-    $('#iaBox').innerHTML = `<div class="alert err">No se pudo leer con IA: ${esc(err.message)}</div>`;
+    $('#iaBox').innerHTML = `<div class="alert err">No se pudo leer con IA: ${esc(err.message)}<br>Podés digitar los montos mirando la foto.</div>`;
   } finally { btn.disabled = false; btn.innerHTML = '✨ Leer fotos con IA'; }
-});
+}
 function applyIA(res){
   const dudas = Array.isArray(res.dudas) ? [...res.dudas] : [];
   const rows = [];
@@ -679,7 +775,9 @@ function applyIA(res){
     if (!lot) { lot = String(L.loteria || 'Otra').trim(); ia.loteria = true; dudas.push(`"${lot}" no está en la lista de loterías; revisá la fila.`); }
     let turno = '';
     if (turnosDe(lot).length) {
-      const t = matchTurno(lot, L.turno);
+      // Si el turno vino pegado al nombre ("Nica G", "NicaG", "Tica Noche"), se saca de ahí.
+      const resto = norm(L.loteria).replace(norm(lot), '').trim();
+      const t = matchTurno(lot, L.turno) || (isBlank(L.turno) && resto ? matchTurno(lot, resto) : null);
       if (t) turno = t;
       else { ia.turno = true; if (!isBlank(L.turno)) dudas.push(`Turno "${L.turno}" de ${lot} no reconocido; quedó "Sin turno".`); }
     }
@@ -797,6 +895,8 @@ let dLot = [], dTpl = [];
 function openCfg(){
   $('#apiKey').value = localStorage.getItem(LS.key) || '';
   $('#apiModel').value = localStorage.getItem(LS.model) || '';
+  $('#shopPin').value = localStorage.getItem(LS.pin) || '';
+  $('#iaModo').value = modoIA();
   dLot = cfg.loterias.map(l => ({nombre:l.nombre, turnosTxt:l.turnos.join(', ')}));
   dTpl = structuredClone(cfg.plantilla);
   renderCfg(); $('#dCfg').showModal();
@@ -842,6 +942,9 @@ $('#bCfgSave').addEventListener('click', () => {
   const k = $('#apiKey').value.trim(), m = $('#apiModel').value.trim();
   k ? localStorage.setItem(LS.key, k) : localStorage.removeItem(LS.key);
   m ? localStorage.setItem(LS.model, m) : localStorage.removeItem(LS.model);
+  const pin = $('#shopPin').value.trim();
+  pin ? localStorage.setItem(LS.pin, pin) : localStorage.removeItem(LS.pin);
+  localStorage.setItem(LS.modo, $('#iaModo').value === 'claude' ? 'claude' : 'gratis');
   const loterias = dLot.filter(l => l.nombre.trim()).map(l => ({nombre:l.nombre.trim(), turnos:l.turnosTxt.split(',').map(s => s.trim()).filter(Boolean)}));
   if (!loterias.length) return toast('Debe haber al menos una lotería');
   const names = loterias.map(l => l.nombre);
@@ -853,7 +956,7 @@ $('#bCfgSave').addEventListener('click', () => {
 });
 $('#bCfg').addEventListener('click', openCfg);
 $('#bWipe').addEventListener('click', () => {
-  if (!confirm('Esto borra el historial, el borrador, los ajustes y la clave de API de este dispositivo. ¿Continuar?')) return;
+  if (!confirm('Esto borra el historial, el borrador, los ajustes, el PIN y la clave de API de este dispositivo. ¿Continuar?')) return;
   Object.values(LS).forEach(k => localStorage.removeItem(k)); ['cc_cfg_v1','cc_draft_v1'].forEach(k => localStorage.removeItem(k)); location.reload();
 });
 

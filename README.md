@@ -24,14 +24,18 @@ Todo funciona en el navegador. No hay servidor ni base de datos: los datos se gu
 4. En uno o dos minutos la app queda en `https://TU-USUARIO.github.io/cierre-caja/`.
 5. En el teléfono, abrí el enlace y usá **Agregar a pantalla de inicio** para tenerla como app.
 
-## Lectura de fotos con IA (opcional)
+## Lectura de fotos con IA (gratis)
 
-1. Sacá una clave de API en <https://console.anthropic.com> (necesita saldo; cada lectura cuesta unos pocos centavos de dólar).
-2. En la app: ⚙️ → pegá la clave → **Guardar ajustes**.
-3. Agregá las fotos → **✨ Leer fotos con IA**. Los montos leídos quedan en azul: revisalos contra la foto. Al editar un monto, deja de estar en azul.
+La app usa un servicio gratis del puesto (Cloudflare Workers AI). No hace falta clave de API.
 
-La IA lee solo la jornada que corresponde al día de la semana de la fecha elegida (por ejemplo, el bloque "Martes").
+1. En la app: ⚙️ → **PIN del puesto** (se lo da el dueño) → **Guardar ajustes**.
+2. Tomá la foto con la hoja **derecha**, de frente y con buena luz.
+3. La app te muestra cada foto y pregunta **"¿Se lee derecha?"**. Si está de lado o de cabeza, tocá **↻ Girar** hasta que los títulos se lean bien. Si la foto parecía de lado, la app ya la giró sola: revisá que no haya quedado de cabeza.
+4. Tocá **✨ Leer fotos con IA**. Los montos leídos quedan **en azul**: revisalos uno por uno contra la foto. Al editar un monto, deja de estar en azul.
+5. Mirá los avisos del consolidado: si la suma no coincide con el **Total** escrito en la hoja, hay un monto mal leído.
 
-**Seguridad:** la clave queda guardada en el navegador del dispositivo. Usala solo en teléfonos del negocio, y ponele un límite de gasto en la consola de Anthropic. Si un teléfono se pierde, revocá la clave desde la consola.
+La IA lee solo la jornada del día de la semana de la fecha elegida (por ejemplo, el bloque "Martes"). Se equivoca a veces con la letra a mano (un 7 que parece 1, por ejemplo), por eso **siempre hay que revisar**. Hay un máximo de 60 lecturas por día para todo el puesto.
 
-Sin clave, la app funciona igual: los montos se digitan mirando la foto.
+Sin PIN o sin internet, la app funciona igual: los montos se digitan mirando la foto.
+
+**Opción avanzada:** en ⚙️ → *Avanzado* se puede usar Claude con una clave de API propia de Anthropic (lee mejor, pero cuesta unos centavos por lectura y la clave queda en el teléfono).
