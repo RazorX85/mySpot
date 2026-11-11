@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f5132">
+<title>Cierre de Caja · Puesto de Lotería</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎟️</text></svg>">
+<style>
+  :root{
+    --bg:#f3f5f2; --card:#fff; --ink:#1b2420; --muted:#66736c; --line:#e1e6e2;
+    --brand:#0f5132; --brand-2:#198754; --brand-soft:#e6f2ec;
+    --red:#b42318; --red-soft:#fdecea; --amber-soft:#fff6db;
+    --ia:#eef4ff; --ia-line:#9db8f5;
+    --r:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+  header{background:var(--brand);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:20;
+    display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  header h1{font-size:17px;margin:0;flex:1;font-weight:650;letter-spacing:.2px}
+  header button{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:10px;padding:8px 11px;font-size:14px}
+  main{max-width:760px;margin:0 auto;padding:12px 12px 110px}
+  .card{background:var(--card);border-radius:var(--r);padding:14px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,.05);border:1px solid var(--line)}
+  .card h2{font-size:15px;margin:0 0 10px;display:flex;align-items:center;gap:8px;color:var(--brand)}
+  .card h2 .sp{flex:1}
+  .muted{color:var(--muted);font-size:13px}
+  label.f{display:block;font-size:12.5px;color:var(--muted);margin-bottom:10px}
+  label.f input,label.f textarea,label.f select{display:block;width:100%;margin-top:4px}
+  input,textarea,select{font:inherit;color:inherit;border:1px solid #cfd8d2;border-radius:10px;padding:9px 10px;background:#fff;min-width:0}
+  input:focus,textarea:focus,select:focus{outline:2px solid var(--brand-2);outline-offset:-1px;border-color:transparent}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .money{text-align:right;font-variant-numeric:tabular-nums}
+  .big{font-size:18px;font-weight:650}
+  button{font:inherit;cursor:pointer}
+  .btn{border:0;border-radius:11px;padding:11px 14px;background:var(--brand);color:#fff;font-weight:600}
+  .btn.sec{background:var(--brand-soft);color:var(--brand)}
+  .btn.ghost{background:transparent;color:var(--brand);border:1px solid #cfd8d2}
+  .btn.danger{background:var(--red-soft);color:var(--red)}
+  .btn.sm{padding:6px 10px;font-size:13px;border-radius:9px}
+  .btn:disabled{opacity:.55}
+  .btns{display:flex;flex-wrap:wrap;gap:8px}
+  .btns .btn{flex:1 1 auto}
+  /* Fotos */
+  .thumbs{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px}
+  .thumb{flex:0 0 auto;width:84px;height:84px;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#ddd}
+  .thumb img{width:100%;height:100%;object-fit:cover}
+  .addph{flex:0 0 auto;width:84px;height:84px;border-radius:10px;border:2px dashed #b8c6bd;display:flex;align-items:center;justify-content:center;
+    flex-direction:column;color:var(--brand);font-size:12px;background:#fafcfb}
+  .addph b{font-size:26px;line-height:1}
+  /* Filas de sorteos */
+  .colh{display:grid;grid-template-columns:1fr 1fr 52px;gap:6px;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding:0 2px 4px;text-align:center}
+  .er{border-top:1px solid var(--line);padding:8px 0}
+  .er .top{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+  .er .top select{padding:6px 8px;border-radius:9px}
+  .er .top select.lot{font-weight:650;max-width:46%}
+  .er .top .sor{color:var(--muted);font-size:13px;padding:0 4px}
+  .er .top .nt{margin-left:auto;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--muted)}
+  .er .top .nt.neg{color:var(--red)}
+  .er .top .rm{border:0;background:none;color:var(--muted);font-size:18px;padding:2px 6px}
+  .er .vals{display:grid;grid-template-columns:1fr 1fr 52px;gap:6px}
+  .er .vals input{width:100%;padding:8px 8px}
+  .er .vals input.num{text-align:center;padding:8px 2px}
+  input.ia,select.ia{background:var(--ia);border-color:var(--ia-line)}
+  .addrow{display:flex;flex-wrap:wrap;gap:6px;padding-top:10px;border-top:1px solid var(--line)}
+  .addrow .btn{flex:1 1 auto}
+  .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;background:var(--brand-soft);color:var(--brand);font-weight:600}
+  table.t{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}
+  table.t th,table.t td{padding:7px 4px;border-bottom:1px solid var(--line);text-align:right}
+  table.t th:first-child,table.t td:first-child{text-align:left}
+  table.t th{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+  table.t tr.lot td{font-weight:650}
+  table.t tr.subt td{font-size:13px;color:var(--muted);border-bottom-style:dashed}
+  table.t tr.subt td:first-child{padding-left:16px}
+  table.t tfoot td{font-weight:700;border-bottom:0;border-top:2px solid var(--ink)}
+  .neg{color:var(--red)!important} .pos{color:var(--brand-2)}
+  .cons div{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+  .cons div.tot{border-bottom:0;border-top:2px solid var(--ink);font-size:18px;font-weight:700;padding-top:10px}
+  .alert{border-radius:10px;padding:10px 12px;font-size:13.5px;margin:8px 0}
+  .alert.warn{background:var(--amber-soft);color:#5c4100}
+  .alert.ok{background:var(--brand-soft);color:var(--brand)}
+  .alert.err{background:var(--red-soft);color:var(--red)}
+  .alert.info{background:var(--ia);color:#1d3d8f}
+  .alert ul{margin:4px 0 0;padding-left:18px}
+  details.card>summary{list-style:none;cursor:pointer;font-weight:700;color:var(--brand);font-size:15px;display:flex;gap:8px;align-items:center}
+  details.card>summary::-webkit-details-marker{display:none}
+  details.card>summary::after{content:'▸';margin-left:auto;transition:transform .2s}
+  details.card[open]>summary::after{transform:rotate(90deg)}
+  details.card[open]>summary{margin-bottom:10px}
+  /* Barra inferior */
+  .bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);z-index:20;
+    padding:8px 12px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -2px 10px rgba(0,0,0,.06)}
+  .bar .in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:8px;text-align:center}
+  .bar small{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .bar b{font-size:15px;font-variant-numeric:tabular-nums}
+  .bar .fin b{color:var(--brand);font-size:16.5px}
+  /* Diálogos */
+  dialog{border:0;border-radius:16px;padding:0;width:min(640px,94vw);max-height:90vh;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+  dialog::backdrop{background:rgba(10,20,15,.55)}
+  .dh{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:2}
+  .dh h3{margin:0;font-size:16px;flex:1}
+  .db{padding:14px 16px}
+  .db h4{margin:16px 0 6px}
+  .x{background:none;border:0;font-size:22px;line-height:1;color:var(--muted);padding:4px 8px}
+  #viewer{width:100vw;max-width:100vw;height:100vh;max-height:100vh;border-radius:0;background:#111}
+  #viewer .dh{background:#111;border-color:#333;color:#fff}
+  #viewer .x{color:#fff}
+  #viewer .btn.sec{background:#2a2a2a;color:#fff}
+  #vwrap{overflow:auto;height:calc(100vh - 62px);display:flex;align-items:flex-start;justify-content:center}
+  #vimg{max-width:100%;display:block;margin:auto}
+  #vimg.zoom{max-width:none;width:240%}
+  .hist-item{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .hist-item .i{flex:1;min-width:0}
+  .hist-item .i b{display:block}
+  .cfgrow{display:grid;grid-template-columns:1fr 1.3fr auto;gap:6px;align-items:center;margin-bottom:6px}
+  .ctl{display:flex;gap:2px}
+  .ctl button{border:1px solid #cfd8d2;background:#fff;border-radius:8px;width:32px;height:36px;padding:0}
+  .tplrow{border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:6px}
+  .tplrow .a{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+  .tplrow .a select{flex:1;padding:6px 8px}
+  .days{display:flex;gap:4px}
+  .days button{flex:1;border:1px solid #cfd8d2;background:#fff;border-radius:8px;padding:5px 0;font-size:13px;font-weight:600;color:var(--muted)}
+  .days button.on{background:var(--brand);border-color:var(--brand);color:#fff}
+  .toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:#1b2420;color:#fff;padding:10px 16px;border-radius:12px;
+    font-size:14px;z-index:100;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw;text-align:center}
+  .toast.on{opacity:1}
+  .spin{display:inline-block;width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:s .7s linear infinite;vertical-align:-3px}
+  @keyframes s{to{transform:rotate(360deg)}}
+  .print-only{display:none}
+  @media print{
+    header,.bar,.noprint,.toast,dialog{display:none!important}
+    body{background:#fff}
+    main{padding:0;max-width:none}
+    .card{box-shadow:none;border:1px solid #bbb;break-inside:avoid}
+    .print-only{display:block}
+    input,select{border:0;padding:2px;appearance:none;-webkit-appearance:none;background:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎟️ Cierre de Caja</h1>
+  <button id="bHist" title="Historial">📚 Historial</button>
+  <button id="bCfg" title="Ajustes">⚙️</button>
+</header>
+
+<main>
+  <div class="print-only"><h2 style="margin:0 0 8px">Cierre de caja</h2></div>
+
+  <!-- Datos del día -->
+  <section class="card">
+    <h2>Datos del día <span class="sp"></span><span id="estado" class="pill">Borrador</span></h2>
+    <div class="grid2">
+      <label class="f">Fecha<input type="date" id="fecha"></label>
+      <label class="f">Dependiente<input type="text" id="dependiente" placeholder="Nombre" autocomplete="name"></label>
+    </div>
+    <label class="f" style="margin-bottom:0">Caja inicial (monto con el que inició el día)
+      <input type="text" id="cajaInicial" class="money big" inputmode="numeric" placeholder="₡0">
+    </label>
+  </section>
+
+  <!-- Fotos -->
+  <section class="card noprint">
+    <h2>Fotos de los apuntes <span class="sp"></span><span class="muted" id="nFotos"></span></h2>
+    <div class="thumbs" id="thumbs">
+      <label class="addph"><b>＋</b>Agregar<input type="file" id="fileIn" accept="image/*" multiple hidden></label>
+    </div>
+    <div class="btns" style="margin-top:6px">
+      <button class="btn" id="bIA">✨ Leer fotos con IA</button>
+    </div>
+    <p class="muted" style="margin:8px 0 0">Tocá una foto para verla en grande y digitar los montos. Con la IA, los montos se llenan solos y quedan
+      <span style="background:var(--ia);border:1px solid var(--ia-line);border-radius:5px;padding:0 4px">en azul</span> para que los revisés.</p>
+    <div id="iaBox"></div>
+  </section>
+
+  <!-- Sorteos -->
+  <section class="card">
+    <h2>Ventas y premios <span class="sp"></span><button class="btn ghost sm noprint" id="bTpl" title="Cargar las filas de la plantilla para este día">↺ Plantilla</button></h2>
+    <p class="muted noprint" style="margin:-4px 0 10px">Una fila por sorteo, en el orden de la hoja. Se pueden agregar, quitar o cambiar.</p>
+    <div class="colh"><span>Venta</span><span>Premio</span><span>#</span></div>
+    <div id="rows"></div>
+    <div class="addrow noprint" id="addRow"></div>
+  </section>
+
+  <!-- Subtotal por lotería -->
+  <section class="card">
+    <h2>Subtotal por lotería</h2>
+    <table class="t" id="tLot"></table>
+  </section>
+
+  <!-- Consolidado -->
+  <section class="card">
+    <h2>Consolidado</h2>
+    <div class="cons" id="cons"></div>
+    <div id="checks"></div>
+  </section>
+
+  <!-- Arqueo (opcional, plegado) -->
+  <details class="card" id="arqDet">
+    <summary>Arqueo de caja <span class="muted" style="font-weight:400">(opcional)</span></summary>
+    <p class="muted" style="margin:0 0 10px">Lo que realmente hay al cerrar. Se compara con la caja final esperada.</p>
+    <div class="grid2" id="arqueo"></div>
+    <div class="cons" id="arqTot"></div>
+  </details>
+
+  <section class="card">
+    <h2>Notas</h2>
+    <textarea id="notas" rows="3" style="width:100%" placeholder="Observaciones del día…"></textarea>
+  </section>
+
+  <section class="card noprint">
+    <div class="btns">
+      <button class="btn" id="bSave">💾 Guardar cierre</button>
+      <button class="btn sec" id="bShare">📤 Compartir</button>
+    </div>
+    <div class="btns" style="margin-top:8px">
+      <button class="btn ghost" id="bPrint">🖨️ Imprimir / PDF</button>
+      <button class="btn ghost" id="bCsv">⬇️ CSV</button>
+      <button class="btn ghost" id="bNext">➡️ Nuevo día</button>
+    </div>
+  </section>
+</main>
+
+<div class="bar noprint"><div class="in">
+  <div><small>Ventas</small><b id="sV">₡0</b></div>
+  <div><small>Premios</small><b id="sP">₡0</b></div>
+  <div class="fin"><small>Caja final</small><b id="sF">₡0</b></div>
+</div></div>
+
+<!-- Visor de fotos -->
+<dialog id="viewer">
+  <div class="dh">
+    <h3 id="vTitle">Foto</h3>
+    <button class="btn sec" id="vRot" title="Rotar">⟳</button>
+    <button class="btn sec" id="vDel" title="Quitar">🗑️</button>
+    <button class="x" data-close>✕</button>
+  </div>
+  <div id="vwrap"><img id="vimg" alt="Foto de apuntes"></div>
+</dialog>
+
+<!-- Historial -->
+<dialog id="dHist">
+  <div class="dh"><h3>Historial de cierres</h3><button class="x" data-close>✕</button></div>
+  <div class="db">
+    <div id="histList"></div>
+    <div class="btns" style="margin-top:12px">
+      <button class="btn ghost" id="bHistCsv">⬇️ CSV de todo</button>
+      <button class="btn ghost" id="bBackup">💾 Respaldo</button>
+      <label class="btn ghost" style="text-align:center">📥 Restaurar<input type="file" id="restoreIn" accept="application/json" hidden></label>
+    </div>
+  </div>
+</dialog>
+
+<!-- Ajustes -->
+<dialog id="dCfg">
+  <div class="dh"><h3>Ajustes</h3><button class="x" data-close>✕</button></div>
+  <div class="db">
+    <h4 style="margin-top:0">Lectura con IA (Claude)</h4>
+    <p class="muted" style="margin:0 0 8px">Necesita una clave de API de Anthropic (console.anthropic.com). Se guarda solo en este dispositivo.</p>
+    <label class="f">Clave de API<input type="password" id="apiKey" placeholder="sk-ant-…" autocomplete="off"></label>
+    <label class="f">Modelo<input type="text" id="apiModel" placeholder="claude-sonnet-5-5"></label>
+
+    <h4>Loterías</h4>
+    <p class="muted" style="margin:0 0 8px">Turnos separados por coma. Dejalo vacío si la lotería no se marca por turno (puede tener uno o varios sorteos al día).</p>
+    <div id="cfgLot"></div>
+    <button class="btn ghost sm" id="bAddLot">＋ Agregar lotería</button>
+
+    <h4>Plantilla de filas por día</h4>
+    <p class="muted" style="margin:0 0 8px">Filas que se cargan al iniciar un día, en el orden de la hoja. Marcá los días en que aplica cada una.</p>
+    <div id="cfgTpl"></div>
+    <button class="btn ghost sm" id="bAddTpl">＋ Agregar fila</button>
+
+    <div class="btns" style="margin-top:16px">
+      <button class="btn ghost" id="bResetCfg">Restablecer</button>
+      <button class="btn" id="bCfgSave">Guardar ajustes</button>
+    </div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:18px 0 12px">
+    <button class="btn danger" id="bWipe" style="width:100%">Borrar todos los datos de este dispositivo</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ---------- Utilidades ---------- */
+const $ = s => document.querySelector(s);
+const LS = {cfg:'cc_cfg_v2', draft:'cc_draft_v2', hist:'cc_hist_v1', key:'cc_apikey', model:'cc_model'};
+const load = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+const save = (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){ toast('No se pudo guardar en el dispositivo'); } };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => { if (v === null || v === undefined || v === '') return 0; const s = String(v).replace(/[^\d-]/g,''); return s && s !== '-' ? parseInt(s,10) : 0; };
+const isBlank = v => v === null || v === undefined || v === '';
+const digits = v => { const s = String(v ?? '').replace(/[^\d]/g,''); return s === '' ? null : parseInt(s,10); };
+const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+const fmt = n => (n < 0 ? '-₡' : '₡') + Math.abs(Math.round(n)).toLocaleString('es-CR');
+const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+const dow = f => new Date((f || today()) + 'T12:00').getDay();
+const fechaLarga = f => { try { return new Date(f + 'T12:00').toLocaleDateString('es-CR',{weekday:'long', day:'numeric', month:'long', year:'numeric'}); } catch { return f; } };
+const DIAS = [{d:1,l:'L',n:'lunes'},{d:2,l:'K',n:'martes'},{d:3,l:'M',n:'miércoles'},{d:4,l:'J',n:'jueves'},{d:5,l:'V',n:'viernes'},{d:6,l:'S',n:'sábado'},{d:0,l:'D',n:'domingo'}];
+const TODOS = [0,1,2,3,4,5,6];
+let toastT;
+function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('on'), 2800); }
+
+/* ---------- Configuración ---------- */
+const DEFAULT_CFG = {
+  loterias: [
+    {nombre:'La Primera', turnos:[]},
+    {nombre:'Nica',       turnos:['Día','Tarde','Noche','Extra']},
+    {nombre:'Honduras',   turnos:[]},
+    {nombre:'Tica',       turnos:['Día','Tarde','Noche']},
+  ],
+  plantilla: [
+    {loteria:'La Primera', turno:'',      dias:TODOS},
+    {loteria:'Nica',       turno:'Día',   dias:TODOS},
+    {loteria:'Honduras',   turno:'',      dias:TODOS},
+    {loteria:'Tica',       turno:'Día',   dias:TODOS},
+    {loteria:'Nica',       turno:'Tarde', dias:TODOS},
+    {loteria:'Honduras',   turno:'',      dias:TODOS},
+    {loteria:'Tica',       turno:'Tarde', dias:TODOS},
+    {loteria:'Nica',       turno:'Extra', dias:[2,6,0]},
+    {loteria:'La Primera', turno:'',      dias:TODOS},
+    {loteria:'Tica',       turno:'Noche', dias:TODOS},
+    {loteria:'Nica',       turno:'Noche', dias:TODOS},
+    {loteria:'Honduras',   turno:'',      dias:TODOS},
+  ],
+};
+let cfg = load(LS.cfg) || structuredClone(DEFAULT_CFG);
+const lotDef = name => cfg.loterias.find(l => l.nombre === name);
+const turnosDe = name => (lotDef(name) || {turnos:[]}).turnos;
+const ARQUEO = [
+  {id:'billetes', label:'Billetes'}, {id:'monedas', label:'Monedas'},
+  {id:'sinpe', label:'SINPE Móvil'}, {id:'creditos', label:'Créditos'}, {id:'otros', label:'Otros'},
+];
+
+function rowsFromTemplate(fecha){
+  const d = dow(fecha);
+  return cfg.plantilla.filter(t => (t.dias || TODOS).includes(d))
+    .map(t => ({id:uid(), loteria:t.loteria, turno:t.turno || '', venta:null, premio:null, numero:'', ia:{}}));
+}
+function newCierre(cajaInicial = null, fecha = today(), dependiente = ''){
+  return {v:2, id:uid(), fecha, dependiente, cajaInicial, rows:rowsFromTemplate(fecha),
+          arqueo:{}, notas:'', ia:null, iaCaja:false, guardado:false};
+}
+// Convierte cierres de la versión anterior (filas fijas) al formato nuevo
+function migrate(c){
+  if (c && !Array.isArray(c.rows)) {
+    const lines = c.cfgLines || [];
+    c.rows = lines.map(l => { const v = (c.lines || {})[l.id] || {};
+      return {id:uid(), loteria:l.nombre, turno:(turnosDe(l.nombre).includes(l.turno) ? l.turno : ''), venta:v.venta ?? null, premio:v.premio ?? null, numero:v.numero || '', ia:{}}; });
+    delete c.lines; delete c.iaFilled; c.v = 2;
+  }
+  return c;
+}
+let cur = migrate(load(LS.draft)) || newCierre();
+let photos = []; // {name, dataUrl}
+let vIdx = -1;
+const persistDraft = () => save(LS.draft, cur);
+const rowHasData = r => !isBlank(r.venta) || !isBlank(r.premio);
+const hasData = () => cur.rows.some(rowHasData);
+
+/* ---------- Cálculos ---------- */
+function totals(c = cur){
+  let V = 0, P = 0;
+  c.rows.forEach(r => { V += num(r.venta); P += num(r.premio); });
+  const ini = num(c.cajaInicial), fin = ini + V - P;
+  const arq = ARQUEO.reduce((s,a) => s + num(c.arqueo[a.id]), 0);
+  const hayArq = ARQUEO.some(a => !isBlank(c.arqueo[a.id]));
+  return {V, P, N: V - P, ini, fin, arq, hayArq, dif: arq - fin};
+}
+// Agrupa por lotería (orden del catálogo, luego otras) y, dentro, por turno
+function porLoteria(c = cur){
+  const names = [...cfg.loterias.map(l => l.nombre)];
+  c.rows.forEach(r => { if (!names.includes(r.loteria)) names.push(r.loteria); });
+  return names.map(n => {
+    const rs = c.rows.filter(r => r.loteria === n); if (!rs.length) return null;
+    const g = {nombre:n, V:0, P:0, sorteos:rs.length, turnos:[]};
+    const tmap = {};
+    rs.forEach(r => { g.V += num(r.venta); g.P += num(r.premio);
+      const k = r.turno || ''; if (!tmap[k]) { tmap[k] = {turno:k, V:0, P:0, n:0}; g.turnos.push(tmap[k]); }
+      tmap[k].V += num(r.venta); tmap[k].P += num(r.premio); tmap[k].n++; });
+    const orden = turnosDe(n);
+    g.turnos.sort((a,b) => (a.turno === '' ? 99 : orden.indexOf(a.turno)) - (b.turno === '' ? 99 : orden.indexOf(b.turno)));
+    return g;
+  }).filter(Boolean);
+}
+// Etiqueta de sorteo para loterías sin turno: "sorteo 1", "sorteo 2"…
+function sorteoIdx(c, row){
+  let n = 0; for (const r of c.rows) { if (r.loteria === row.loteria && !r.turno) n++; if (r === row) return n; } return n;
+}
+function rowLabel(c, r){ return r.turno ? `${r.loteria} ${r.turno}` : `${r.loteria} (sorteo ${sorteoIdx(c, r)})`; }
+
+/* ---------- Render ---------- */
+function moneyInput(attrs, val, extraCls=''){
+  return `<input type="text" inputmode="numeric" class="money ${extraCls}" ${attrs} value="${isBlank(val) ? '' : esc(val)}" placeholder="0">`;
+}
+function renderHeader(){
+  $('#fecha').value = cur.fecha || today();
+  $('#dependiente').value = cur.dependiente || '';
+  $('#cajaInicial').value = isBlank(cur.cajaInicial) ? '' : cur.cajaInicial;
+  $('#cajaInicial').classList.toggle('ia', !!cur.iaCaja);
+  $('#notas').value = cur.notas || '';
+  $('#estado').textContent = cur.guardado ? 'Guardado' : 'Borrador';
+}
+function lotOptions(sel){
+  const names = cfg.loterias.map(l => l.nombre);
+  if (sel && !names.includes(sel)) names.push(sel);
+  return names.map(n => `<option ${n === sel ? 'selected' : ''}>${esc(n)}</option>`).join('');
+}
+function renderRows(){
+  $('#rows').innerHTML = cur.rows.map((r,i) => {
+    const ts = turnosDe(r.loteria), ia = r.ia || {};
+    const tsel = ts.length
+      ? `<select data-i="${i}" data-f="turno" class="${ia.turno?'ia':''}" aria-label="Turno">
+           ${ts.map(t => `<option ${t === r.turno ? 'selected' : ''}>${esc(t)}</option>`).join('')}
+           <option value="" ${!r.turno ? 'selected' : ''}>Sin turno</option></select>`
+      : `<span class="sor">sorteo ${sorteoIdx(cur, r)}</span>`;
+    return `<div class="er" data-row="${i}">
+      <div class="top">
+        <select class="lot ${ia.loteria?'ia':''}" data-i="${i}" data-f="loteria" aria-label="Lotería">${lotOptions(r.loteria)}</select>
+        ${tsel}
+        <span class="nt" data-neto="${i}"></span>
+        <button class="rm noprint" data-rm="${i}" aria-label="Quitar fila">✕</button>
+      </div>
+      <div class="vals">
+        ${moneyInput(`data-i="${i}" data-f="venta" aria-label="Venta"`, r.venta, ia.venta?'ia':'')}
+        ${moneyInput(`data-i="${i}" data-f="premio" aria-label="Premio"`, r.premio, ia.premio?'ia':'')}
+        <input type="text" inputmode="numeric" class="num ${ia.numero?'ia':''}" data-i="${i}" data-f="numero" value="${esc(r.numero||'')}" placeholder="#" aria-label="Número ganador" maxlength="4">
+      </div></div>`;
+  }).join('') || '<p class="muted">No hay filas. Agregá un sorteo abajo.</p>';
+  $('#addRow').innerHTML = cfg.loterias.map(l => `<button class="btn sec sm" data-add="${esc(l.nombre)}">＋ ${esc(l.nombre)}</button>`).join('');
+}
+function renderArqueo(){
+  $('#arqueo').innerHTML = ARQUEO.map(a => `<label class="f">${a.label}
+    ${moneyInput(`data-arq="${a.id}"`, cur.arqueo[a.id])}</label>`).join('');
+  if (ARQUEO.some(a => !isBlank(cur.arqueo[a.id]))) $('#arqDet').open = true;
+}
+function renderIABox(){
+  const box = $('#iaBox'); const ia = cur.ia;
+  if (!ia) { box.innerHTML = ''; return; }
+  const dudas = (ia.dudas || []).filter(Boolean);
+  box.innerHTML = `<div class="alert info"><b>Leído por IA${ia.jornada ? ' — jornada: ' + esc(ia.jornada) : ''}.</b>
+    Revisá cada monto en azul contra la foto antes de guardar.
+    ${dudas.length ? `<ul>${dudas.map(d => `<li>${esc(d)}</li>`).join('')}</ul>` : ''}</div>`;
+}
+function recalc(){
+  const T = totals();
+  cur.rows.forEach((r,i) => {
+    const el = document.querySelector(`[data-neto="${i}"]`); if (!el) return;
+    const n = num(r.venta) - num(r.premio);
+    el.textContent = rowHasData(r) ? fmt(n) : ''; el.classList.toggle('neg', n < 0);
+  });
+  // por lotería con desglose por turno
+  const G = porLoteria();
+  $('#tLot').innerHTML = `<thead><tr><th>Lotería</th><th>Ventas</th><th>Premios</th><th>Neto</th></tr></thead>
+    <tbody>${G.map(g => {
+      const desg = g.turnos.length > 1 || (g.turnos[0] && g.turnos[0].turno);
+      const label = esc(g.nombre) + (!desg && g.sorteos > 1 ? ` <span class="muted">(${g.sorteos} sorteos)</span>` : '');
+      return `<tr class="lot"><td>${label}</td><td>${fmt(g.V)}</td><td>${fmt(g.P)}</td><td class="${g.V-g.P<0?'neg':''}">${fmt(g.V-g.P)}</td></tr>` +
+        (desg ? g.turnos.map(t => `<tr class="subt"><td>${esc(t.turno || 'Sin turno')}${t.n > 1 ? ` (${t.n})` : ''}</td><td>${fmt(t.V)}</td><td>${fmt(t.P)}</td><td class="${t.V-t.P<0?'neg':''}">${fmt(t.V-t.P)}</td></tr>`).join('') : '');
+    }).join('')}</tbody>
+    <tfoot><tr><td>Total</td><td>${fmt(T.V)}</td><td>${fmt(T.P)}</td><td class="${T.N<0?'neg':''}">${fmt(T.N)}</td></tr></tfoot>`;
+  $('#cons').innerHTML = `
+    <div><span>Caja inicial</span><b>${fmt(T.ini)}</b></div>
+    <div><span>＋ Ventas</span><b class="pos">${fmt(T.V)}</b></div>
+    <div><span>− Premios pagados</span><b class="neg">${fmt(T.P)}</b></div>
+    <div><span>Resultado del día (ventas − premios)</span><b class="${T.N<0?'neg':''}">${fmt(T.N)}</b></div>
+    <div class="tot"><span>Caja final esperada</span><span>${fmt(T.fin)}</span></div>`;
+  const ch = [];
+  if (cur.ia) {
+    const chk = (lbl, escrito, calc) => num(escrito) === calc
+      ? `<div class="alert ok">✔ ${lbl} coinciden con el total escrito en la hoja (${fmt(num(escrito))}).</div>`
+      : `<div class="alert warn">⚠ La hoja dice ${lbl.toLowerCase()} ${fmt(num(escrito))}, pero la suma da ${fmt(calc)}. Diferencia ${fmt(calc - num(escrito))}.</div>`;
+    if (cur.ia.total_ventas_escrito != null) ch.push(chk('Ventas', cur.ia.total_ventas_escrito, T.V));
+    if (cur.ia.total_premios_escrito != null) ch.push(chk('Premios', cur.ia.total_premios_escrito, T.P));
+  }
+  if (isBlank(cur.cajaInicial)) ch.push(`<div class="alert warn">Falta la caja inicial.</div>`);
+  $('#checks').innerHTML = ch.join('');
+  if (T.hayArq) {
+    const d = T.dif, txt = d === 0 ? 'Cuadra exacto ✔' : (d > 0 ? `Sobran ${fmt(d)}` : `Faltan ${fmt(-d)}`);
+    $('#arqTot').innerHTML = `<div><span>Total contado</span><b>${fmt(T.arq)}</b></div>
+      <div><span>Caja final esperada</span><b>${fmt(T.fin)}</b></div>
+      <div class="tot"><span>Diferencia</span><span class="${d < 0 ? 'neg' : 'pos'}">${txt}</span></div>`;
+  } else $('#arqTot').innerHTML = '';
+  $('#sV').textContent = fmt(T.V); $('#sP').textContent = fmt(T.P); $('#sF').textContent = fmt(T.fin);
+  $('#nFotos').textContent = photos.length ? `${photos.length} foto${photos.length>1?'s':''}` : '';
+}
+function renderAll(){ renderHeader(); renderRows(); renderArqueo(); renderIABox(); renderPhotos(); recalc(); }
+
+/* ---------- Eventos del formulario ---------- */
+function markDirty(){ if (cur.guardado) { cur.guardado = false; $('#estado').textContent = 'Borrador'; } persistDraft(); }
+$('#fecha').addEventListener('change', e => {
+  cur.fecha = e.target.value || today();
+  // Si todavía no hay montos, la plantilla se ajusta al nuevo día de la semana
+  if (!hasData()) { cur.rows = rowsFromTemplate(cur.fecha); renderRows(); }
+  markDirty(); recalc();
+});
+$('#dependiente').addEventListener('input', e => { cur.dependiente = e.target.value; markDirty(); });
+$('#notas').addEventListener('input', e => { cur.notas = e.target.value; markDirty(); });
+$('#cajaInicial').addEventListener('input', e => {
+  cur.cajaInicial = digits(e.target.value); cur.iaCaja = false; e.target.classList.remove('ia'); markDirty(); recalc();
+});
+$('#rows').addEventListener('input', e => {
+  const t = e.target, i = t.dataset.i, f = t.dataset.f; if (i == null || t.tagName === 'SELECT') return;
+  const r = cur.rows[i]; if (!r) return;
+  if (f === 'numero') r.numero = t.value.trim(); else r[f] = digits(t.value);
+  if (r.ia) delete r.ia[f]; t.classList.remove('ia');
+  markDirty(); recalc();
+});
+$('#rows').addEventListener('change', e => {
+  const t = e.target; if (t.tagName !== 'SELECT') return;
+  const r = cur.rows[t.dataset.i]; if (!r) return;
+  r[t.dataset.f] = t.value; if (r.ia) delete r.ia[t.dataset.f];
+  if (t.dataset.f === 'loteria') { const ts = turnosDe(r.loteria); if (!ts.includes(r.turno)) r.turno = ts[0] || ''; }
+  markDirty(); renderRows(); recalc();
+});
+$('#rows').addEventListener('click', e => {
+  const b = e.target.closest('[data-rm]'); if (!b) return;
+  const r = cur.rows[b.dataset.rm];
+  if (rowHasData(r) && !confirm(`¿Quitar la fila ${rowLabel(cur, r)}?`)) return;
+  cur.rows.splice(+b.dataset.rm, 1); markDirty(); renderRows(); recalc();
+});
+$('#addRow').addEventListener('click', e => {
+  const b = e.target.closest('[data-add]'); if (!b) return;
+  const n = b.dataset.add, ts = turnosDe(n);
+  // Propone el primer turno de esa lotería que todavía no esté en el día
+  const usados = cur.rows.filter(r => r.loteria === n).map(r => r.turno);
+  const turno = ts.find(t => !usados.includes(t)) ?? ts[0] ?? '';
+  cur.rows.push({id:uid(), loteria:n, turno, venta:null, premio:null, numero:'', ia:{}});
+  markDirty(); renderRows(); recalc();
+  const last = document.querySelector(`[data-i="${cur.rows.length-1}"][data-f="venta"]`); if (last) last.focus();
+});
+$('#bTpl').addEventListener('click', () => {
+  if (hasData() && !confirm('Esto reemplaza las filas actuales (y sus montos) por la plantilla de este día. ¿Continuar?')) return;
+  cur.rows = rowsFromTemplate(cur.fecha); markDirty(); renderRows(); recalc();
+});
+$('#arqueo').addEventListener('input', e => {
+  const k = e.target.dataset.arq; if (!k) return;
+  cur.arqueo[k] = digits(e.target.value); markDirty(); recalc();
+});
+document.addEventListener('focusout', e => {
+  const t = e.target; if (t.matches && t.matches('input.money')) t.value = t.value.replace(/[^\d]/g,'');
+});
+// Enter → siguiente campo de texto
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || !e.target.matches('main input')) return;
+  e.preventDefault();
+  const all = [...document.querySelectorAll('main input:not([type=file]):not([type=date])')];
+  const i = all.indexOf(e.target); if (i >= 0 && all[i+1]) all[i+1].focus();
+});
+
+/* ---------- Fotos ---------- */
+function loadImg(src){ return new Promise((res,rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
+async function resizeFile(file, max = 1600){
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await loadImg(url);
+    const s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.85);
+  } finally { URL.revokeObjectURL(url); }
+}
+async function rotateDataUrl(src){
+  const img = await loadImg(src);
+  const c = document.createElement('canvas'); c.width = img.naturalHeight; c.height = img.naturalWidth;
+  const x = c.getContext('2d'); x.translate(c.width/2, c.height/2); x.rotate(Math.PI/2);
+  x.drawImage(img, -img.naturalWidth/2, -img.naturalHeight/2);
+  return c.toDataURL('image/jpeg', 0.85);
+}
+$('#fileIn').addEventListener('change', async e => {
+  const files = [...e.target.files]; e.target.value = '';
+  for (const f of files) {
+    try { photos.push({name: f.name, dataUrl: await resizeFile(f)}); }
+    catch { toast('No se pudo abrir ' + f.name); }
+  }
+  renderPhotos(); recalc();
+});
+function renderPhotos(){
+  const wrap = $('#thumbs'); const add = wrap.querySelector('.addph');
+  wrap.querySelectorAll('.thumb').forEach(n => n.remove());
+  photos.forEach((p,i) => {
+    const d = document.createElement('div'); d.className = 'thumb';
+    d.innerHTML = `<img src="${p.dataUrl}" alt="Foto ${i+1}">`;
+    d.onclick = () => openViewer(i);
+    wrap.insertBefore(d, add);
+  });
+}
+function openViewer(i){
+  vIdx = i; const im = $('#vimg'); im.src = photos[i].dataUrl; im.classList.remove('zoom');
+  $('#vTitle').textContent = `Foto ${i+1} de ${photos.length}`;
+  $('#viewer').showModal();
+}
+$('#vimg').addEventListener('click', e => e.target.classList.toggle('zoom'));
+$('#vRot').addEventListener('click', async () => {
+  if (vIdx < 0) return;
+  photos[vIdx].dataUrl = await rotateDataUrl(photos[vIdx].dataUrl);
+  $('#vimg').src = photos[vIdx].dataUrl; renderPhotos();
+});
+$('#vDel').addEventListener('click', () => {
+  if (vIdx < 0) return; photos.splice(vIdx,1); vIdx = -1; $('#viewer').close(); renderPhotos(); recalc();
+});
+
+/* ---------- Lectura con IA ---------- */
+function extractJson(t){
+  const m = t.match(/```(?:json)?\s*([\s\S]*?)```/); if (m) t = m[1];
+  const a = t.indexOf('{'), b = t.lastIndexOf('}');
+  if (a < 0 || b < a) throw new Error('La respuesta no trae datos');
+  return JSON.parse(t.slice(a, b+1));
+}
+function buildPrompt(){
+  const d = dow(cur.fecha), dia = DIAS.find(x => x.d === d).n;
+  const cat = cfg.loterias.map(l => `- "${l.nombre}": ` + (l.turnos.length
+      ? `se marca por turno, uno de: ${l.turnos.map(t => `"${t}"`).join(', ')}`
+      : `NO se marca por turno; puede tener uno o varios sorteos al día (turno = null)`)).join('\n');
+  const tpl = rowsFromTemplate(cur.fecha).map(r => r.turno ? `${r.loteria} ${r.turno}` : r.loteria).join(', ');
+  return `Vas a leer fotos de apuntes manuscritos del cierre diario de un puesto de lotería en Costa Rica (montos en colones).
+Las fotos pueden estar rotadas, tener sombras o mostrar varias jornadas (por ejemplo "Lunes" y "Martes").
+Leé SOLO la jornada correspondiente al ${dia}. Si esa jornada no aparece, usá la jornada más reciente que tenga datos y decilo en "jornada".
+
+Cada renglón es un sorteo: nombre de la lotería, un monto "Venta:" y un monto "Premio:". A la derecha del premio puede venir el número ganador (ej. "#22"); si se lee, ponelo en "numero" sin el "#".
+Un "0", una raya o un espacio vacío significan 0. Un monto escrito encima de la jornada (ej. "₡400000") es la caja inicial.
+Si la hoja trae totales escritos ("Total:"), reportalos aparte; no los incluyas como renglones.
+
+Loterías conocidas:
+${cat}
+Los sorteos NO siempre siguen el mismo orden y una lotería puede repetirse varias veces en el día. Un orden habitual es: ${tpl}.
+La Nica tiene un sorteo "Extra" los martes y fines de semana: un renglón de Nica que no diga Día, Tarde ni Noche probablemente es el Extra.
+Si el turno de una lotería que sí se marca por turno no está escrito, deducilo por su posición (Día, luego Tarde, luego Noche) y mencionalo en "dudas".
+Si hay un renglón agregado a mano o un monto suelto que no sabés a qué sorteo pertenece, incluilo con tu mejor interpretación y explicalo en "dudas".
+
+Devolvé los renglones EN EL ORDEN en que aparecen en la hoja, incluso los que tengan venta y premio en 0.
+Respondé ÚNICAMENTE con un JSON válido, sin texto adicional, con esta forma:
+{"jornada":"Lunes","caja_inicial":400000,"lineas":[{"loteria":"La Primera","turno":null,"venta":38200,"premio":0,"numero":"22"},{"loteria":"Nica","turno":"Día","venta":36300,"premio":81000,"numero":null}],"total_ventas_escrito":326000,"total_premios_escrito":360000,"dudas":["frase corta sobre una cifra ilegible o ambigua"]}
+Usá números enteros sin separadores. Usá null en lo que no se pueda leer o no aparezca. No inventés valores.`;
+}
+function matchLoteria(name){
+  const n = norm(name); if (!n) return null;
+  const L = cfg.loterias;
+  return (L.find(l => norm(l.nombre) === n) || L.find(l => n.includes(norm(l.nombre)) || norm(l.nombre).includes(n)) || {}).nombre || null;
+}
+function matchTurno(lot, t){
+  const n = norm(t); if (!n) return '';
+  const ts = turnosDe(lot);
+  return ts.find(x => norm(x) === n) || ts.find(x => norm(x).startsWith(n) || n.startsWith(norm(x))) ||
+         (/(manana|dia|mediodia)/.test(n) ? ts.find(x => norm(x) === 'dia') : null) || null;
+}
+$('#bIA').addEventListener('click', async () => {
+  const key = localStorage.getItem(LS.key);
+  if (!key) { toast('Primero configurá la clave de API'); openCfg(); return; }
+  if (!photos.length) { toast('Agregá al menos una foto'); return; }
+  if (hasData() && !confirm('La lectura reemplaza las filas y montos actuales. ¿Continuar?')) return;
+  const btn = $('#bIA'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Leyendo fotos…';
+  try {
+    const content = photos.map(p => ({type:'image', source:{type:'base64', media_type:'image/jpeg', data:p.dataUrl.split(',')[1]}}));
+    content.push({type:'text', text: buildPrompt()});
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({model: localStorage.getItem(LS.model) || 'claude-sonnet-5-5', max_tokens: 3000, messages:[{role:'user', content}]})
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error((data.error && data.error.message) || ('Error ' + r.status));
+    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    applyIA(extractJson(text));
+    toast('Listo. Revisá los montos en azul.');
+  } catch (err) {
+    $('#iaBox').innerHTML = `<div class="alert err">No se pudo leer con IA: ${esc(err.message)}</div>`;
+  } finally { btn.disabled = false; btn.innerHTML = '✨ Leer fotos con IA'; }
+});
+function applyIA(res){
+  const dudas = Array.isArray(res.dudas) ? [...res.dudas] : [];
+  const rows = [];
+  (res.lineas || []).forEach(L => {
+    let lot = matchLoteria(L.loteria), ia = {venta:true, premio:true};
+    if (!lot) { lot = String(L.loteria || 'Otra').trim(); ia.loteria = true; dudas.push(`"${lot}" no está en la lista de loterías; revisá la fila.`); }
+    let turno = '';
+    if (turnosDe(lot).length) {
+      const t = matchTurno(lot, L.turno);
+      if (t) turno = t;
+      else { ia.turno = true; if (!isBlank(L.turno)) dudas.push(`Turno "${L.turno}" de ${lot} no reconocido; quedó "Sin turno".`); }
+    }
+    if (L.numero) ia.numero = true;
+    rows.push({id:uid(), loteria:lot, turno, venta: isBlank(L.venta) ? null : num(L.venta), premio: isBlank(L.premio) ? null : num(L.premio),
+               numero: L.numero ? String(L.numero).replace(/[^\d]/g,'').slice(0,4) : '', ia});
+  });
+  if (!rows.length) { dudas.unshift('No se encontró ningún sorteo en las fotos.'); }
+  else cur.rows = rows;
+  if (res.caja_inicial != null && isBlank(cur.cajaInicial)) { cur.cajaInicial = num(res.caja_inicial); cur.iaCaja = true; }
+  cur.ia = {jornada: res.jornada || null, total_ventas_escrito: res.total_ventas_escrito ?? null,
+            total_premios_escrito: res.total_premios_escrito ?? null, dudas};
+  markDirty(); renderAll();
+}
+
+/* ---------- Guardar / historial ---------- */
+const getHist = () => (load(LS.hist) || []).map(migrate);
+function saveCierre(silent){
+  const h = getHist();
+  cur.guardado = true; cur.updatedAt = new Date().toISOString();
+  const rec = structuredClone(cur); rec.totales = totals();
+  const i = h.findIndex(x => x.id === cur.id); if (i >= 0) h[i] = rec; else h.unshift(rec);
+  h.sort((a,b) => (b.fecha||'').localeCompare(a.fecha||''));
+  save(LS.hist, h); persistDraft(); $('#estado').textContent = 'Guardado';
+  if (!silent) toast('Cierre guardado');
+}
+$('#bSave').addEventListener('click', () => saveCierre());
+function renderHist(){
+  const h = getHist();
+  $('#histList').innerHTML = h.length ? h.map(x => { const T = x.totales || totals(x);
+    const dif = T.hayArq ? (T.dif === 0 ? ' · cuadra' : (T.dif > 0 ? ` · sobran ${fmt(T.dif)}` : ` · faltan ${fmt(-T.dif)}`)) : '';
+    return `<div class="hist-item"><div class="i"><b>${esc(fechaLarga(x.fecha))}</b>
+      <span class="muted">${esc(x.dependiente || 'Sin nombre')} · Final ${fmt(T.fin||0)}${dif}</span></div>
+      <button class="btn sec sm" data-open="${x.id}">Abrir</button><button class="btn danger sm" data-del="${x.id}" aria-label="Borrar">🗑️</button></div>`; }).join('')
+    : '<p class="muted">Todavía no hay cierres guardados.</p>';
+}
+$('#bHist').addEventListener('click', () => { renderHist(); $('#dHist').showModal(); });
+$('#histList').addEventListener('click', e => {
+  const o = e.target.dataset.open, d = e.target.dataset.del;
+  if (o) { const x = getHist().find(y => y.id === o); if (!x) return;
+    if (!cur.guardado && hasData() && !confirm('El cierre actual no está guardado. ¿Abrir otro de todos modos?')) return;
+    cur = structuredClone(x); delete cur.totales;
+    photos = []; persistDraft(); renderAll(); $('#dHist').close(); toast('Cierre abierto'); }
+  if (d && confirm('¿Borrar este cierre del historial?')) { save(LS.hist, getHist().filter(y => y.id !== d)); renderHist(); }
+});
+$('#bNext').addEventListener('click', () => {
+  const T = totals();
+  if (!confirm(`¿Empezar un día nuevo?\nSe guarda este cierre y la caja inicial del nuevo día será ${fmt(T.fin)}.`)) return;
+  if (hasData()) saveCierre(true);
+  const d = new Date((cur.fecha || today()) + 'T12:00'); d.setDate(d.getDate() + 1);
+  cur = newCierre(T.fin, d.toISOString().slice(0,10), cur.dependiente);
+  photos = []; persistDraft(); renderAll(); window.scrollTo({top:0, behavior:'smooth'});
+  toast('Nuevo día listo');
+});
+
+/* ---------- Compartir / exportar ---------- */
+function resumenTexto(){
+  const T = totals(); const L = [];
+  L.push(`*Cierre de caja* — ${fechaLarga(cur.fecha)}`);
+  if (cur.dependiente) L.push(`Dependiente: ${cur.dependiente}`);
+  L.push(`Caja inicial: ${fmt(T.ini)}`, '', '*Sorteos*');
+  cur.rows.filter(rowHasData).forEach(r => L.push(`  ${rowLabel(cur, r)}: V ${fmt(num(r.venta))} · P ${fmt(num(r.premio))}${r.numero ? ' · #' + r.numero : ''}`));
+  L.push('', '*Por lotería*');
+  porLoteria().forEach(g => {
+    L.push(`  ${g.nombre}: V ${fmt(g.V)} · P ${fmt(g.P)} · ${fmt(g.V-g.P)}`);
+    if (g.turnos.length > 1 || (g.turnos[0] && g.turnos[0].turno))
+      g.turnos.forEach(t => L.push(`     – ${t.turno || 'Sin turno'}: V ${fmt(t.V)} · P ${fmt(t.P)} · ${fmt(t.V-t.P)}`));
+  });
+  L.push('', `Ventas: ${fmt(T.V)}`, `Premios: ${fmt(T.P)}`, `*Caja final esperada: ${fmt(T.fin)}*`);
+  if (T.hayArq) L.push(`Contado: ${fmt(T.arq)}`, T.dif === 0 ? 'Cuadra exacto ✔' : (T.dif > 0 ? `Sobran ${fmt(T.dif)}` : `Faltan ${fmt(-T.dif)}`));
+  if (cur.notas) L.push('', 'Notas: ' + cur.notas);
+  return L.join('\n');
+}
+$('#bShare').addEventListener('click', async () => {
+  const text = resumenTexto();
+  if (navigator.share) { try { await navigator.share({title:'Cierre de caja', text}); return; } catch(e) { if (e.name === 'AbortError') return; } }
+  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+});
+$('#bPrint').addEventListener('click', () => window.print());
+function download(name, text, type){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+const csvCell = v => /[",;\n]/.test(String(v ?? '')) ? `"${String(v).replace(/"/g,'""')}"` : String(v ?? '');
+const toCsv = rows => '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\n');
+const CSV_HEAD = ['fecha','dependiente','orden','loteria','turno','venta','premio','neto','numero'];
+const csvRows = c => c.rows.map((r,i) => [c.fecha, c.dependiente||'', i+1, r.loteria, r.turno || '', num(r.venta), num(r.premio), num(r.venta)-num(r.premio), r.numero||'']);
+$('#bCsv').addEventListener('click', () => {
+  const T = totals(); const rows = [CSV_HEAD, ...csvRows(cur), [], ['loteria','ventas','premios','neto']];
+  porLoteria().forEach(g => rows.push([g.nombre, g.V, g.P, g.V-g.P]));
+  rows.push([], ['caja_inicial', T.ini], ['total_ventas', T.V], ['total_premios', T.P], ['caja_final_esperada', T.fin]);
+  if (T.hayArq) rows.push(['contado', T.arq], ['diferencia', T.dif]);
+  download(`cierre_${cur.fecha}.csv`, toCsv(rows), 'text/csv');
+});
+$('#bHistCsv').addEventListener('click', () => {
+  const h = getHist(); if (!h.length) return toast('No hay cierres guardados');
+  const rows = [['fecha','dependiente','caja_inicial','ventas','premios','caja_final_esperada','contado','diferencia']];
+  h.forEach(x => { const T = totals(x); rows.push([x.fecha, x.dependiente||'', T.ini, T.V, T.P, T.fin, T.hayArq ? T.arq : '', T.hayArq ? T.dif : '']); });
+  rows.push([], CSV_HEAD); h.forEach(x => rows.push(...csvRows(x)));
+  download('cierres_historial.csv', toCsv(rows), 'text/csv');
+});
+$('#bBackup').addEventListener('click', () => download(`respaldo_cierres_${today()}.json`, JSON.stringify({cfg, hist:getHist()}, null, 1), 'application/json'));
+$('#restoreIn').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try { const d = JSON.parse(await f.text()); if (!Array.isArray(d.hist)) throw 0;
+    const h = getHist(); d.hist.map(migrate).forEach(x => { if (!h.some(y => y.id === x.id)) h.push(x); });
+    h.sort((a,b) => (b.fecha||'').localeCompare(a.fecha||'')); save(LS.hist, h);
+    if (d.cfg && Array.isArray(d.cfg.loterias) && confirm('¿Usar también las loterías y la plantilla del respaldo?')) { cfg = d.cfg; save(LS.cfg, cfg); renderAll(); }
+    renderHist(); toast('Respaldo restaurado');
+  } catch { toast('Archivo de respaldo no válido'); }
+});
+
+/* ---------- Ajustes ---------- */
+let dLot = [], dTpl = [];
+function openCfg(){
+  $('#apiKey').value = localStorage.getItem(LS.key) || '';
+  $('#apiModel').value = localStorage.getItem(LS.model) || '';
+  dLot = cfg.loterias.map(l => ({nombre:l.nombre, turnosTxt:l.turnos.join(', ')}));
+  dTpl = structuredClone(cfg.plantilla);
+  renderCfg(); $('#dCfg').showModal();
+}
+const dTurnos = name => { const l = dLot.find(x => x.nombre.trim() === name); return l ? l.turnosTxt.split(',').map(s => s.trim()).filter(Boolean) : []; };
+function renderCfg(){
+  $('#cfgLot').innerHTML = dLot.map((l,i) => `<div class="cfgrow">
+    <input value="${esc(l.nombre)}" data-li="${i}" data-k="nombre" placeholder="Lotería">
+    <input value="${esc(l.turnosTxt)}" data-li="${i}" data-k="turnosTxt" placeholder="Sin turno">
+    <div class="ctl"><button data-lrm="${i}" aria-label="Quitar">✕</button></div></div>`).join('');
+  const names = dLot.map(l => l.nombre.trim()).filter(Boolean);
+  $('#cfgTpl').innerHTML = dTpl.map((t,i) => { const ts = dTurnos(t.loteria);
+    return `<div class="tplrow"><div class="a">
+      <select data-ti="${i}" data-k="loteria">${[...new Set([...names, t.loteria])].map(n => `<option ${n === t.loteria ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>
+      <select data-ti="${i}" data-k="turno" ${ts.length ? '' : 'disabled'}>${ts.map(x => `<option ${x === t.turno ? 'selected' : ''}>${esc(x)}</option>`).join('')}<option value="" ${!t.turno ? 'selected' : ''}>${ts.length ? 'Sin turno' : 'Sorteo'}</option></select>
+      <div class="ctl"><button data-mv="${i}" data-d="-1" aria-label="Subir">↑</button><button data-mv="${i}" data-d="1" aria-label="Bajar">↓</button><button data-trm="${i}" aria-label="Quitar">✕</button></div></div>
+      <div class="days">${DIAS.map(d => `<button data-day="${i}" data-d="${d.d}" class="${(t.dias||TODOS).includes(d.d) ? 'on' : ''}" title="${d.n}">${d.l}</button>`).join('')}</div></div>`; }).join('');
+}
+$('#cfgLot').addEventListener('input', e => { const i = e.target.dataset.li; if (i != null) dLot[i][e.target.dataset.k] = e.target.value; });
+$('#cfgLot').addEventListener('change', () => renderCfg());
+$('#cfgLot').addEventListener('click', e => { const b = e.target.closest('[data-lrm]'); if (b) { dLot.splice(+b.dataset.lrm, 1); renderCfg(); } });
+$('#bAddLot').addEventListener('click', () => { dLot.push({nombre:'', turnosTxt:''}); renderCfg(); });
+$('#cfgTpl').addEventListener('change', e => {
+  const i = e.target.dataset.ti; if (i == null) return; const t = dTpl[i];
+  t[e.target.dataset.k] = e.target.value;
+  if (e.target.dataset.k === 'loteria') { const ts = dTurnos(t.loteria); if (!ts.includes(t.turno)) t.turno = ts[0] || ''; }
+  renderCfg();
+});
+$('#cfgTpl').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.mv != null) { const i = +b.dataset.mv, j = i + (+b.dataset.d); if (j < 0 || j >= dTpl.length) return; [dTpl[i], dTpl[j]] = [dTpl[j], dTpl[i]]; }
+  if (b.dataset.trm != null) dTpl.splice(+b.dataset.trm, 1);
+  if (b.dataset.day != null) { const t = dTpl[b.dataset.day], d = +b.dataset.d; t.dias = [...(t.dias || TODOS)];
+    t.dias = t.dias.includes(d) ? t.dias.filter(x => x !== d) : [...t.dias, d]; }
+  renderCfg();
+});
+$('#bAddTpl').addEventListener('click', () => { const n = (dLot[0] || {}).nombre || ''; dTpl.push({loteria:n, turno:dTurnos(n)[0] || '', dias:[...TODOS]}); renderCfg(); });
+$('#bResetCfg').addEventListener('click', () => {
+  if (!confirm('¿Volver a las loterías y plantilla originales?')) return;
+  dLot = DEFAULT_CFG.loterias.map(l => ({nombre:l.nombre, turnosTxt:l.turnos.join(', ')})); dTpl = structuredClone(DEFAULT_CFG.plantilla); renderCfg();
+});
+$('#bCfgSave').addEventListener('click', () => {
+  const k = $('#apiKey').value.trim(), m = $('#apiModel').value.trim();
+  k ? localStorage.setItem(LS.key, k) : localStorage.removeItem(LS.key);
+  m ? localStorage.setItem(LS.model, m) : localStorage.removeItem(LS.model);
+  const loterias = dLot.filter(l => l.nombre.trim()).map(l => ({nombre:l.nombre.trim(), turnos:l.turnosTxt.split(',').map(s => s.trim()).filter(Boolean)}));
+  if (!loterias.length) return toast('Debe haber al menos una lotería');
+  const names = loterias.map(l => l.nombre);
+  const plantilla = dTpl.filter(t => names.includes(t.loteria)).map(t => ({loteria:t.loteria,
+    turno: loterias.find(l => l.nombre === t.loteria).turnos.includes(t.turno) ? t.turno : '', dias: t.dias || TODOS}));
+  cfg = {loterias, plantilla}; save(LS.cfg, cfg);
+  if (!hasData()) cur.rows = rowsFromTemplate(cur.fecha);
+  persistDraft(); $('#dCfg').close(); renderAll(); toast('Ajustes guardados');
+});
+$('#bCfg').addEventListener('click', openCfg);
+$('#bWipe').addEventListener('click', () => {
+  if (!confirm('Esto borra el historial, el borrador, los ajustes y la clave de API de este dispositivo. ¿Continuar?')) return;
+  Object.values(LS).forEach(k => localStorage.removeItem(k)); ['cc_cfg_v1','cc_draft_v1'].forEach(k => localStorage.removeItem(k)); location.reload();
+});
+
+/* ---------- Diálogos ---------- */
+document.querySelectorAll('dialog').forEach(d => {
+  d.addEventListener('click', e => { if (e.target.closest('[data-close]') || e.target === d) d.close(); });
+});
+
+renderAll();
+</script>
+</body>
+</html>
