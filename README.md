@@ -38,4 +38,6 @@ La IA lee solo la jornada del día de la semana de la fecha elegida (por ejemplo
 
 Sin PIN o sin internet, la app funciona igual: los montos se digitan mirando la foto.
 
+**Para el dueño — cómo funciona el PIN:** el PIN se guarda en dos lados y tienen que coincidir. (1) En el **servidor** (Cloudflare), una sola vez, con `npx wrangler secret put SHOP_PIN`; ahí queda secreto y **nunca** va en el código publicado. (2) En **cada teléfono**, en ⚙️ → PIN del puesto. Si el servidor no tiene PIN, la app dice "Falta configurar el PIN del puesto en el servidor". Para cambiar el PIN, se repite el paso 1 y se actualiza en los teléfonos.
+
 **Opción avanzada:** en ⚙️ → *Avanzado* se puede usar Claude con una clave de API propia de Anthropic (lee mejor, pero cuesta unos centavos por lectura y la clave queda en el teléfono).

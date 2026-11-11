@@ -315,7 +315,7 @@ const $ = s => document.querySelector(s);
 const LS = {cfg:'cc_cfg_v2', draft:'cc_draft_v2', hist:'cc_hist_v1', key:'cc_apikey', model:'cc_model', pin:'cc_pin', modo:'cc_modo'};
 // Servicio gratis de lectura (Cloudflare Worker + Workers AI). Código en worker/ del repo privado.
 // (cc_worker_url solo sirve para probar con un Worker local)
-const WORKER_URL = localStorage.getItem('cc_worker_url') || 'https://myspot-proxy.cristhiangp.workers.dev/leer';
+const WORKER_URL = localStorage.getItem('cc_worker_url') || 'https://myspot-proxy.razorx.workers.dev/leer';
 const MAX_FOTOS_GRATIS = 4;
 const load = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
 const save = (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){ toast('No se pudo guardar en el dispositivo'); } };
